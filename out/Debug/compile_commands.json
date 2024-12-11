@@ -1,0 +1,26 @@
+[
+{
+  "directory": "D:/devs/projects/cmb/out/Debug",
+  "command": "clang-cl  /nologo -DDEBUG -ID:\\devs\\projects\\cmb\\include -ID:\\devs\\projects\\cmb\\external\\cJSON /DWIN32 /D_WINDOWS /Zi /Ob0 /Od /RTC1 -MDd -fms-extensions -fms-compatibility /Od /FoCMakeFiles\\cmb.dir\\src\\cmb.c.obj /FdCMakeFiles\\cmb.dir\\ -c -- D:\\devs\\projects\\cmb\\src\\cmb.c",
+  "file": "D:\\devs\\projects\\cmb\\src\\cmb.c",
+  "output": "CMakeFiles\\cmb.dir\\src\\cmb.c.obj"
+},
+{
+  "directory": "D:/devs/projects/cmb/out/Debug",
+  "command": "clang-cl  /nologo -DDEBUG -ID:\\devs\\projects\\cmb\\include -ID:\\devs\\projects\\cmb\\external\\cJSON /DWIN32 /D_WINDOWS /Zi /Ob0 /Od /RTC1 -MDd -fms-extensions -fms-compatibility /Od /FoCMakeFiles\\cmb.dir\\src\\cmb_utils.c.obj /FdCMakeFiles\\cmb.dir\\ -c -- D:\\devs\\projects\\cmb\\src\\cmb_utils.c",
+  "file": "D:\\devs\\projects\\cmb\\src\\cmb_utils.c",
+  "output": "CMakeFiles\\cmb.dir\\src\\cmb_utils.c.obj"
+},
+{
+  "directory": "D:/devs/projects/cmb/out/Debug",
+  "command": "clang-cl  /nologo -DDEBUG -ID:\\devs\\projects\\cmb\\include -ID:\\devs\\projects\\cmb\\external\\cJSON /DWIN32 /D_WINDOWS /Zi /Ob0 /Od /RTC1 -MDd -fms-extensions -fms-compatibility /Od /FoCMakeFiles\\cmb.dir\\src\\main.c.obj /FdCMakeFiles\\cmb.dir\\ -c -- D:\\devs\\projects\\cmb\\src\\main.c",
+  "file": "D:\\devs\\projects\\cmb\\src\\main.c",
+  "output": "CMakeFiles\\cmb.dir\\src\\main.c.obj"
+},
+{
+  "directory": "D:/devs/projects/cmb/out/Debug",
+  "command": "clang-cl  /nologo -ID:\\devs\\projects\\cmb\\include -ID:\\devs\\projects\\cmb\\external\\cJSON /DWIN32 /D_WINDOWS /Zi /Ob0 /Od /RTC1 -MDd /Foexternal\\cJSON\\CMakeFiles\\cJSON.dir\\cJSON.c.obj /Fdexternal\\cJSON\\CMakeFiles\\cJSON.dir\\cJSON.pdb -c -- D:\\devs\\projects\\cmb\\external\\cJSON\\cJSON.c",
+  "file": "D:\\devs\\projects\\cmb\\external\\cJSON\\cJSON.c",
+  "output": "external\\cJSON\\CMakeFiles\\cJSON.dir\\cJSON.c.obj"
+}
+]

@@ -1,0 +1,14 @@
+# ninja log v6
+14	63	7556319472899474	CMakeFiles/cmb.dir/src/main.c.obj	2d47b35932e11079
+15	77	7556320831602406	CMakeFiles/cmb.dir/src/cmb.c.obj	d88899d6d4061d4b
+15	332	7556322057505698	CMakeFiles/cmb.dir/src/cmb_utils.c.obj	86e9d6c48dfb249b
+332	490	7556322060673895	bin/cmb.exe	d830e5fcecb1ca20
+25	78	7556339544779049	CMakeFiles/cmb.dir/src/main.c.obj	9fe6b156d48c078
+15	81	7556339544684121	CMakeFiles/cmb.dir/src/cmb.c.obj	72f98199b737410d
+9	157	7556339544624037	external/cJSON/CMakeFiles/cJSON.dir/cJSON.c.obj	821c87878e81ef41
+20	366	7556339544729088	CMakeFiles/cmb.dir/src/cmb_utils.c.obj	4d5e53ef85da3a26
+157	1494	7556339546097979	lib/cJSON.lib	b5d3a7a4a2848de0
+1494	1671	7556339559480148	bin/cmb.exe	755776b1e8197441
+17	88	7556354115338666	CMakeFiles/cmb.dir/src/cmb.c.obj	72f98199b737410d
+23	347	7556354115407776	CMakeFiles/cmb.dir/src/cmb_utils.c.obj	4d5e53ef85da3a26
+347	520	7556354118645904	bin/cmb.exe	755776b1e8197441
