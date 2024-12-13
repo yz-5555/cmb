@@ -1,11 +1,11 @@
 #pragma once
 
 // utils
-int cmb_setup();
+int cmbSetup();
 // commands
-void cmb_help();
-int cmb_new(int argc, char* argv[]);
-void cmb_init(int argc, char* argv[]);
-void cmb_build(int argc, char* argv[]);
-void cmb_clean(int argc, char* argv[]);
-void cmb_run(int argc, char* argv[]);
+void cmbHelp();
+int cmbNew(char* argv[]);
+int cmbInit(int argc, char* argv[]);
+void cmbBuild(int argc, char* argv[]);
+void cmbClean(int argc, char* argv[]);
+void cmbRun(int argc, char* argv[]);

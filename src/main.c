@@ -4,27 +4,27 @@
 int main(int argc, char* argv[])
 {
     if (argc < 2) {
-        cmb_help();
+        cmbHelp();
         return 1;
     }
 
-	if (cmb_setup() == 1)
+	if (cmbSetup() == 1)
 		return 1;
 
     if (strcmp(argv[1], "-h") == 0
         || strcmp(argv[1], "--help") == 0
         || strcmp(argv[1], "help") == 0) {
-        cmb_help();
+        cmbHelp();
     } else if (strcmp(argv[1], "new") == 0) {
-        return cmb_new(argc, argv);
+        return cmbNew(argv);
     } else if (strcmp(argv[1], "init") == 0) {
-		cmb_init(argc, argv);
+		return cmbInit(argc, argv);
 	} else if (strcmp(argv[1], "build") == 0) {
-		cmb_build(argc, argv);
+		cmbBuild(argc, argv);
 	} else if (strcmp(argv[1], "run") == 0) {
-		cmb_run(argc, argv);
+		cmbRun(argc, argv);
 	} else {
-		cmb_help();
+		cmbHelp();
 	}
     return 0;
 }

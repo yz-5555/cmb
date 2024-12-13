@@ -16,105 +16,111 @@
 #define MAX_PATH PATH_MAX
 #endif
 
-int cd_here()
+#include "cJson.h"
+
+int cdHere()
 {
-    char current_dir[MAX_PATH];
-    if (CURRENT_DIR(current_dir) == 0) {
-        fprintf(stderr, "cmb: Failed to get current directory.\n");
-        return 1;
-    }
-    if (CHDIR(current_dir) == 1) {
-        fprintf(stderr, "cmb: Failed to cd to current directory.\n");
-        return 1;
-    }
-    return 0;
-}
-int make_root(const char* project_name)
-{
-    char current_dir[MAX_PATH];
-    if (CURRENT_DIR(current_dir) == 0) {
-        fprintf(stderr, "cmb: Failed to get current directory.\n");
-        return 1;
-    }
-	if (MKDIR(project_name) == -1 && errno != EEXIST) {
-		perror("Failed to create project root.");
-		return 1;
-	}
-	
-	size_t current_dir_len = strlen(current_dir);
-	size_t project_name_len = strlen(project_name);
-
-	if (current_dir_len + 1 + project_name_len > MAX_PATH) {
-		fprintf(stderr, "cmb: Path of the project is too long.\n");
-		return 1;
-	}
-
-	if (current_dir_len > 0 && current_dir[current_dir_len - 1] != '/') {
-		snprintf(current_dir + current_dir_len, MAX_PATH - current_dir_len, "/%s", project_name);
-	} else {
-		snprintf(current_dir + current_dir_len, MAX_PATH - current_dir_len, "%s", project_name);
-	}
-
-    if (CHDIR(current_dir) == 1) {
-        fprintf(stderr, "cmb: Failed to cd to current directory.\n");
-        return 1;
-    }
-    return 0;
-}
-int make_directories()
-{
-	if (MKDIR("src") == -1 && errno != EEXIST) {
-		perror("Failed to create src/.");
-		return 1;
-	}
-	if (MKDIR("target") == -1 && errno != EEXIST) {
-		perror("Failed to create target/.");
-		return 1;
-	}
-	return 0;
-}
-int write_main(FILE* file)
-{
-    if (fopen_s(&file, "src/main.c", "w") != 0) {
-        perror("Failed to create main.c.");
-        return 1;
-    }
-
-    fprintf(file, "#include <stdio.h>\n");
-    fprintf(file, "int main(void)\n{\n");
-    fprintf(file, "    printf(\"Hello, World!\");\n\n");
-    fprintf(file, "    return 0;\n}");
-
-	fclose(file);
+    char currentDir[MAX_PATH];
     
-	return 0;
-}
-int write_cmake_lists(FILE* file, const char* project_name)
-{
-	if (fopen_s(&file, "CMakeLists.txt", "w") != 0) {
-        perror("Failed to create CMakeLists.txt.");
+	if (CURRENT_DIR(currentDir) == 0) {
+        fprintf(stderr, "cmb: Failed to get current directory.\n");
         return 1;
     }
-	
-    fprintf(file, "cmake_minimum_required(VERSION 3.16)\n");
-    fprintf(file, "project(%s)", project_name);
-
-	fclose(file);
-	
-	return 0;
+    if (CHDIR(currentDir) == 1) {
+        fprintf(stderr, "cmb: Failed to cd to current directory.\n");
+        return 1;
+    }
+    return 0;
 }
-int write_cmb_config(FILE* file)
+int makeRoot(const char* projectName)
 {
-	if (fopen_s(&file, "cmb_config.json", "w") != 0) {
-		perror("Failed to create cmb_config.json.");
-		return 1;
+    char currentDir[MAX_PATH];
+    
+	if (CURRENT_DIR(currentDir) == 0) {
+        fprintf(stderr, "cmb: Failed to get current directory.\n");
+        return 1;
+    }
+    if (MKDIR(projectName) == -1 && errno != EEXIST) {
+        perror("cmb: Failed to create project root, ");
+        return 1;
+    }
+    if (CHDIR(projectName) == 1) {
+        fprintf(stderr, "cmb: Failed to cd to current directory.\n");
+        return 1;
+    }
+    if (MKDIR("src") == -1 && errno != EEXIST) {
+        perror("cmb: Failed to create src, ");
+        return 1;
+    }
+    return 0;
+}
+int writeMain(FILE** file)
+{
+    if (fopen_s(file, "src/main.c", "w") != 0) {
+        perror("cmb: Failed to create main.c.");
+        return 1;
+    }
+
+    fprintf(*file, "#include <stdio.h>\n");
+    fprintf(*file, "int main(void)\n{\n");
+    fprintf(*file, "    printf(\"Hello, World!\");\n\n");
+    fprintf(*file, "    return 0;\n}");
+
+    fclose(*file);
+
+    return 0;
+}
+int writeCMakeLists(FILE** file, const char* projectName)
+{
+    if (fopen_s(file, "CMakeLists.txt", "w") != 0) {
+        perror("cmb: Failed to create CMakeLists.txt, ");
+        return 1;
+    }
+
+    fprintf(*file, "cmake_minimum_required(VERSION 3.16)\n");
+    fprintf(*file, "project(%s)", projectName);
+    
+	fclose(*file);
+
+    return 0;
+}
+int writeCmbConfigs(FILE** file)
+{
+    if (fopen_s(file, "cmb_configs.json", "w") != 0) {
+        perror("cmb: Failed to create cmb_configs.json, ");
+        return 1;
+    }
+
+    fprintf(*file, "[\n");
+    fprintf(*file, "    {}\n");
+    fprintf(*file, "]");
+
+    fclose(*file);
+
+    return 0;
+}
+ConfigsState openCmbConfigs(FILE** file, const char* path)
+{
+	int result = fopen_s(file, path, "r");
+	
+	if (result == ENOENT)
+		return CS_NOENT;
+
+	if (result != 0 && result != ENOENT) {
+		perror("cmb: Failed to read cmb_configs.json, ");
+		return CS_ERROR;
 	}
+	
+	char buf[256] = { '\0' };
+	fread(buf, sizeof(char), sizeof(buf), *file);
 
-	fprintf(file, "[\n");
-	fprintf(file, "    {}\n");
-	fprintf(file, "]");
+	if (buf[0] == '\0')
+		return CS_EMPTY;
 
-	fclose(file);
+	return CS_SUCCESS;
+}
+int readCmbConfigs(FILE* file)
+{
 	
 	return 0;
 }

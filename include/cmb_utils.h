@@ -2,11 +2,14 @@
 
 #include <stdio.h>
 
-int cd_here();
-int make_root(const char* project_name);
+// file system
+int cdHere();
+int makeRoot(const char* projectName);
+int writeMain(FILE** file);
+int writeCMakeLists(FILE** file, const char* projectName);
+int writeCmbConfigs(FILE** file);
 
-int make_directories();
-
-int write_main(FILE* file);
-int write_cmake_lists(FILE* file, const char* project_name);
-int write_cmb_config(FILE* file);
+// configs
+typedef enum { CS_SUCCESS, CS_EMPTY, CS_NOENT, CS_ERROR } ConfigsState;
+ConfigsState openCmbConfigs(FILE** file, const char* path);
+int readCmbConfigs(FILE* file);
