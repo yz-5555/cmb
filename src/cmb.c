@@ -10,17 +10,16 @@ int cmbSetup()
 // commands
 void cmbHelp()
 {
-	// TODO: The text needs to be fixed.
     printf("Usage: cmb <command> [options]\n"
            "`cmb` is a simple CLI tool for project management and build automation using CMake.\n\n"
            "Commands:\n"
-           "  cmb init [configName] [configsPath]\n"
-           "      Generate CMake build files by reading the cmb_configs.json at\n"
-           "      the specified <configsPath>. This step configures the generator,\n"
-           "      compiler, and other settings based on the <configName>.\n"
-           "      - If <kits_path> is omitted, the command will look for the file\n"
+           "  cmb init [presetName] [presetsPath]\n"
+           "      Generate CMake build files by reading the cmb_presets.json at\n"
+           "      the specified <presetsPath>. This step configures the generator,\n"
+           "      compiler, and other settings based on the <presetName>.\n"
+           "      - If <presetsPath> is omitted, the command will look for the file\n"
            "        in the current directory.\n"
-           "      - If <kit_name> is omitted, the first entry in the JSON array\n"
+           "      - If <presetName> is omitted, the first entry in the JSON array\n"
            "        will be selected.\n\n"
 
            "  cmb build\n"
@@ -33,9 +32,11 @@ void cmbHelp()
 }
 int cmbInit(int argc, char* argv[])
 {
-    const char* path = "cmb_configs.json";
+    const char* path = "cmb_presets.json";
     if (argv[2] != NULL)
         path = argv[2];
+	
+	// decluare a preset and free the members.
 	return 0;
 }
 void cmbBuild(int argc, char* argv[])

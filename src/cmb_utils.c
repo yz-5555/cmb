@@ -1,5 +1,4 @@
 #include "cmb_utils.h"
-#include "cJSON.h"
 #include <stdio.h>
 
 #ifdef _WIN32
@@ -44,7 +43,7 @@ FileState readFile(const char* path, char** buf)
 	int result = fopen_s(&file, path, "r");
 
 	if (result == ENOENT) {
-		fprintf(stderr, "cmb_utils: Failed to find the file.");
+		fprintf(stderr, "cmb_utils: Failed to find the file.\n");
 		return CFS_NOENT;
 	}
 
@@ -75,12 +74,23 @@ FileState readFile(const char* path, char** buf)
 
 	return CFS_SUCCESS;
 }
-int readCmbConfigs(const char* path)
+int getJSONString(char** str, const cJSON* json)
+{
+	if (cJSON_IsString(json) && json->valuestring != NULL) {
+		size_t size = strlen(json->valuestring) + 1;
+		*str = (char*)malloc(size);
+		strcpy_s(*str, size, json->valuestring);
+
+		return 0;
+	}
+	return 1;
+}
+int readCmbPresets(const char* path, Preset* preset)
 {
 	char* buf = NULL;
 	FileState state = readFile(path, &buf);
 	if (state != CFS_SUCCESS) {
-		fprintf(stderr, "cmb_utils: Failed to read cmb_configs.json.\n");
+		fprintf(stderr, "cmb_utils: Failed to read cmb_presets.json.\n");
 		return 1;
 	}
 
@@ -88,7 +98,7 @@ int readCmbConfigs(const char* path)
 	if (json == NULL) {
 		const char* err = cJSON_GetErrorPtr();
 		if (err != NULL) {
-			fprintf(stderr, "cmb_utils: Failed to parse cmb_configs.json: %s\n", err);
+			fprintf(stderr, "cmb_utils: Failed to parse cmb_presets.json: %s\n", err);
 			cJSON_Delete(json);
 			return 1;
 		}
@@ -96,23 +106,47 @@ int readCmbConfigs(const char* path)
 	free(buf);
 	
 	if (!cJSON_IsArray(json)) {
-		fprintf(stderr, "cmb_utils: Expected a JSON array in cmb_configs.json.\n");
+		fprintf(stderr, "cmb_utils: Expected a JSON array in cmb_presets.json.\n");
 		cJSON_Delete(json);
 		return 1;
 	}
 
-	int arraySize = cJSON_GetArraySize(json);
-	if (arraySize == 0) {
-		fprintf(stderr, "cmb_utils: cmb_configs.json is empty.\n");
+	if (cJSON_GetArraySize(json) == 0) {
+		fprintf(stderr, "cmb_utils: cmb_presets.json is empty.\n");
 		cJSON_Delete(json);
 		return 1;
 	}
-	
-	cJSON* preset;
-	cJSON_ArrayForEach(preset, json)
+
+	cJSON* presetObj;
+	cJSON_ArrayForEach(presetObj, json)
 	{
-		// TODO: parse the damn configs
+		cJSON* name = cJSON_GetObjectItemCaseSensitive(presetObj, "name");
+		if (getJSONString(&(preset->name), name) == 1) continue;
+
+		cJSON* compilers = cJSON_GetObjectItemCaseSensitive(presetObj, "compilers");
+		if (compilers != NULL) {
+			cJSON* cCompiler = cJSON_GetObjectItemCaseSensitive(compilers, "C");
+			if (getJSONString(&(preset->cCompiler), cCompiler) == 1) continue;
+
+			cJSON* cppCompiler = cJSON_GetObjectItemCaseSensitive(compilers, "CXX");
+			if (getJSONString(&(preset->cppCompiler), cppCompiler) == 1) continue;
+		}
+		cJSON* generator = cJSON_GetObjectItemCaseSensitive(presetObj, "generator");
+		if (getJSONString(&(preset->generator), generator) == 1) continue;
+
+		cJSON* buildTarget = cJSON_GetObjectItemCaseSensitive(presetObj, "buildTarget");
+		if (getJSONString(&(preset->buildTarget), buildTarget) == 1) continue;
+
+		cJSON* buildDir = cJSON_GetObjectItemCaseSensitive(presetObj, "buildDir");
+		if (getJSONString(&(preset->buildDir), buildDir) == 1) continue;
+
+		cJSON* generateCmd = cJSON_GetObjectItemCaseSensitive(presetObj, "generateCmd");
+		// get array.
+		cJSON* buildCmd = cJSON_GetObjectItemCaseSensitive(presetObj, "buildCmd");
+		// get array.
 	}
+
+	// no need for free here.
 	
     return 0;
 }
