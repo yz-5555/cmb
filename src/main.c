@@ -8,15 +8,10 @@ int main(int argc, char* argv[])
         return 1;
     }
 
-	if (cmbSetup() == 1)
-		return 1;
-
     if (strcmp(argv[1], "-h") == 0
         || strcmp(argv[1], "--help") == 0
         || strcmp(argv[1], "help") == 0) {
         cmbHelp();
-    } else if (strcmp(argv[1], "new") == 0) {
-        return cmbNew(argv);
     } else if (strcmp(argv[1], "init") == 0) {
 		return cmbInit(argc, argv);
 	} else if (strcmp(argv[1], "build") == 0) {

@@ -1,4 +1,6 @@
 #include "cmb_utils.h"
+#include "cJSON.h"
+#include <stdio.h>
 
 #ifdef _WIN32
 #include <direct.h>
@@ -16,13 +18,13 @@
 #define MAX_PATH PATH_MAX
 #endif
 
-#include "cJson.h"
+#include "cJSON.h"
 
 int cdHere()
 {
     char currentDir[MAX_PATH];
-    
-	if (CURRENT_DIR(currentDir) == 0) {
+
+    if (CURRENT_DIR(currentDir) == 0) {
         fprintf(stderr, "cmb: Failed to get current directory.\n");
         return 1;
     }
@@ -32,95 +34,85 @@ int cdHere()
     }
     return 0;
 }
-int makeRoot(const char* projectName)
+inline int isFlag(const char* arg)
 {
-    char currentDir[MAX_PATH];
-    
-	if (CURRENT_DIR(currentDir) == 0) {
-        fprintf(stderr, "cmb: Failed to get current directory.\n");
-        return 1;
-    }
-    if (MKDIR(projectName) == -1 && errno != EEXIST) {
-        perror("cmb: Failed to create project root, ");
-        return 1;
-    }
-    if (CHDIR(projectName) == 1) {
-        fprintf(stderr, "cmb: Failed to cd to current directory.\n");
-        return 1;
-    }
-    if (MKDIR("src") == -1 && errno != EEXIST) {
-        perror("cmb: Failed to create src, ");
-        return 1;
-    }
-    return 0;
+    return arg[0] == '-';
 }
-int writeMain(FILE** file)
+FileState readFile(const char* path, char** buf)
 {
-    if (fopen_s(file, "src/main.c", "w") != 0) {
-        perror("cmb: Failed to create main.c.");
-        return 1;
-    }
+	FILE* file = NULL;
+	int result = fopen_s(&file, path, "r");
 
-    fprintf(*file, "#include <stdio.h>\n");
-    fprintf(*file, "int main(void)\n{\n");
-    fprintf(*file, "    printf(\"Hello, World!\");\n\n");
-    fprintf(*file, "    return 0;\n}");
-
-    fclose(*file);
-
-    return 0;
-}
-int writeCMakeLists(FILE** file, const char* projectName)
-{
-    if (fopen_s(file, "CMakeLists.txt", "w") != 0) {
-        perror("cmb: Failed to create CMakeLists.txt, ");
-        return 1;
-    }
-
-    fprintf(*file, "cmake_minimum_required(VERSION 3.16)\n");
-    fprintf(*file, "project(%s)", projectName);
-    
-	fclose(*file);
-
-    return 0;
-}
-int writeCmbConfigs(FILE** file)
-{
-    if (fopen_s(file, "cmb_configs.json", "w") != 0) {
-        perror("cmb: Failed to create cmb_configs.json, ");
-        return 1;
-    }
-
-    fprintf(*file, "[\n");
-    fprintf(*file, "    {}\n");
-    fprintf(*file, "]");
-
-    fclose(*file);
-
-    return 0;
-}
-ConfigsState openCmbConfigs(FILE** file, const char* path)
-{
-	int result = fopen_s(file, path, "r");
-	
-	if (result == ENOENT)
-		return CS_NOENT;
+	if (result == ENOENT) {
+		fprintf(stderr, "cmb_utils: Failed to find the file.");
+		return CFS_NOENT;
+	}
 
 	if (result != 0 && result != ENOENT) {
-		perror("cmb: Failed to read cmb_configs.json, ");
-		return CS_ERROR;
+		perror("cmb_utils: Failed to read the file, ");
+		return CFS_ERROR;
+	}
+
+	fseek(file, 0, SEEK_END);
+	long size = ftell(file);
+	fseek(file, 0, SEEK_SET);
+
+	if (size == 0) {
+		fprintf(stderr, "cmb_utils: The file is empty.\n");
+		return CFS_EMPTY;
+	}
+
+	*buf = (char *)malloc(size + 1);
+	if (*buf == NULL) {
+		perror("cmb_utils: Failed to allocate memory, ");
+		return CFS_ERROR;
+	}
+
+	fread(*buf, sizeof(char), sizeof(*buf), file);
+	(*buf)[size] = '\0';
+
+	fclose(file);
+
+	return CFS_SUCCESS;
+}
+int readCmbConfigs(const char* path)
+{
+	char* buf = NULL;
+	FileState state = readFile(path, &buf);
+	if (state != CFS_SUCCESS) {
+		fprintf(stderr, "cmb_utils: Failed to read cmb_configs.json.\n");
+		return 1;
+	}
+
+	cJSON* json = cJSON_Parse(buf);
+	if (json == NULL) {
+		const char* err = cJSON_GetErrorPtr();
+		if (err != NULL) {
+			fprintf(stderr, "cmb_utils: Failed to parse cmb_configs.json: %s\n", err);
+			cJSON_Delete(json);
+			return 1;
+		}
+	}
+	free(buf);
+	
+	if (!cJSON_IsArray(json)) {
+		fprintf(stderr, "cmb_utils: Expected a JSON array in cmb_configs.json.\n");
+		cJSON_Delete(json);
+		return 1;
+	}
+
+	int arraySize = cJSON_GetArraySize(json);
+	if (arraySize == 0) {
+		fprintf(stderr, "cmb_utils: cmb_configs.json is empty.\n");
+		cJSON_Delete(json);
+		return 1;
 	}
 	
-	char buf[256] = { '\0' };
-	fread(buf, sizeof(char), sizeof(buf), *file);
-
-	if (buf[0] == '\0')
-		return CS_EMPTY;
-
-	return CS_SUCCESS;
-}
-int readCmbConfigs(FILE* file)
-{
+	cJSON* preset;
+	cJSON_ArrayForEach(preset, json)
+	{
+		// TODO: parse the damn configs
+	}
 	
-	return 0;
+    return 0;
 }
