@@ -1,3 +1,4 @@
 cmake_cmb/
 .cache
 compile_commands.json
+cmb_presets.json
