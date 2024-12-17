@@ -11,12 +11,12 @@ int main(int argc, char* argv[])
         || strcmp(argv[1], "help") == 0) {
         return cmb_help();
     } else if (strcmp(argv[1], "init") == 0) {
-		return cmb_init(argc, argv);
-	} else if (strcmp(argv[1], "build") == 0) {
-		return cmb_build(argc, argv);
-	} else if (strcmp(argv[1], "run") == 0) {
-		return cmb_run(argc, argv);
-	} else {
-		return cmb_help();
-	}
+        return cmb_init(argc, argv);
+    } else if (strcmp(argv[1], "build") == 0) {
+        return cmb_build(argc, argv);
+    } else if (strcmp(argv[1], "run") == 0) {
+        return cmb_run(argc, argv);
+    } else {
+        return cmb_help();
+    }
 }

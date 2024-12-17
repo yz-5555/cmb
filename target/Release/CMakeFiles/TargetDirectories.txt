@@ -1,0 +1,6 @@
+D:/devs/projects/cmb/target/Release/CMakeFiles/cmb.dir
+D:/devs/projects/cmb/target/Release/CMakeFiles/edit_cache.dir
+D:/devs/projects/cmb/target/Release/CMakeFiles/rebuild_cache.dir
+D:/devs/projects/cmb/target/Release/external/cJSON/CMakeFiles/cJSON.dir
+D:/devs/projects/cmb/target/Release/external/cJSON/CMakeFiles/edit_cache.dir
+D:/devs/projects/cmb/target/Release/external/cJSON/CMakeFiles/rebuild_cache.dir

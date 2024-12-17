@@ -1,37 +1,32 @@
 #include "cmb_utils.h"
+#include <stdarg.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
-#ifdef _WIN32
-#include <direct.h>
-#define MKDIR(x) _mkdir(x)
-#define CHDIR(x) _chdir(x)
-#include <Windows.h>
-#define CURRENT_DIR(dir) GetCurrentDirectory(MAX_PATH, dir)
-#else
-#include <sys/stat.h>
-#define MKDIR(x) mkdir(x, 0755)
-#define CHDIR(x) chdir(x)
-#include <limits.h>
-#include <unistd.h>
-#define CURRENT_DIR(dir) getcwd(dir, sizeof(dir))
-#define MAX_PATH PATH_MAX
-#endif
+// do-while is needed for semicolons.
+#define OOPS(x)       \
+    do {              \
+        if (x) {      \
+            return 1; \
+        }             \
+    } while (0)
 
 #include "cJSON.h"
 
-bool cd_here()
+int find_end_of_options(int argc, char* argv[])
 {
-    char current_dir[MAX_PATH];
-
-    if (CURRENT_DIR(current_dir) == 0) {
-        fprintf(stderr, "cmb: Failed to get current directory.\n");
-        return false;
+    int result = -1;
+    if (argc > CMD_NAME_IDX + 1) {
+        for (int i = 0; i < argc; i += 1) {
+            if (!is_flag(argv[i]))
+                continue;
+            if (strcmp(argv[i], "--") != 0)
+                continue;
+            result = i;
+        }
     }
-    if (CHDIR(current_dir) == 1) {
-        fprintf(stderr, "cmb: Failed to cd to current directory.\n");
-        return false;
-    }
-    return true;
+    return result;
 }
 inline bool is_flag(const char* arg)
 {
@@ -44,12 +39,12 @@ FileState read_file(const char* path, char** buf)
 
     if (result == ENOENT) {
         fprintf(stderr, "cmb_utils: Failed to find the file.\n");
-        return CFS_NOENT;
+        return CMB_FS_NOENT;
     }
 
     if (result != 0 && result != ENOENT) {
         perror("cmb_utils: Failed to read the file, ");
-        return CFS_ERROR;
+        return CMB_FS_ERROR;
     }
 
     fseek(file, 0, SEEK_END);
@@ -58,13 +53,13 @@ FileState read_file(const char* path, char** buf)
 
     if (size == 0) {
         fprintf(stderr, "cmb_utils: The file is empty.\n");
-        return CFS_EMPTY;
+        return CMB_FS_EMPTY;
     }
 
     *buf = (char*)malloc(size + 1);
     if (*buf == NULL) {
         perror("cmb_utils: Failed to allocate memory, ");
-        return CFS_ERROR;
+        return CMB_FS_ERROR;
     }
 
     fread(*buf, sizeof(char), size, file);
@@ -72,40 +67,94 @@ FileState read_file(const char* path, char** buf)
 
     fclose(file);
 
-    return CFS_SUCCESS;
+    return CMB_FS_SUCCESS;
 }
-void get_json_string(char** str, const cJSON* json)
+JsonState get_json_string(char** str, const cJSON* json)
 {
     if (!cJSON_IsString(json) || json->valuestring == NULL) {
-        // printf("get_json_string abort: json is invalid.\n");
-        return;
+        // printf("get_json_string warning: json is invalid.\n");
+        return CMB_JS_WARNING;
     }
-    if (*str != NULL && strcmp(*str, json->valuestring) == 0) {
-        // printf("get_json_string abort: str has the same value already.\n");
-        return;
+
+    if (*str != NULL) {
+        if (strcmp(*str, json->valuestring) == 0) {
+            // printf("get_json_string warning: str has the same value already.\n");
+            return CMB_JS_WARNING;
+        }
     }
 
     size_t size = strlen(json->valuestring) + 1;
     *str = (char*)malloc(size);
-	if (*str == NULL) {
-		// printf("get_json_string abort: Failed to dynamically allocate a string.\n");
-		return;
-	}
+    if (*str == NULL) {
+        // printf("get_json_string error: Failed to dynamically allocate a string.\n");
+        return CMB_JS_ERROR;
+    }
     strcpy_s(*str, size, json->valuestring);
 
-    // printf("get_json_string: Successfully assigned '%s' to str.\n", *str);
+    // printf("get_json_string success: Successfully assigned '%s' to str.\n", *str);
+    return CMB_JS_SUCCESS;
+}
+JsonState get_json_array(char*** arr, size_t* len, const cJSON* json)
+{
+    if (!cJSON_IsArray(json)) {
+        // printf("get_json_array warning: json is invalid.\n");
+        return CMB_JS_WARNING;
+    }
+
+    size_t size = cJSON_GetArraySize(json);
+    *len = size;
+    if (size <= 0) {
+        // printf("get_json_array warning: json is invalid.\n");
+        return CMB_JS_WARNING;
+    }
+    *arr = (char**)malloc(size * sizeof(char*));
+    if (*arr == NULL) {
+        // printf("get_json_array error: Failed to dynamically allocate an array.\n");
+        return CMB_JS_ERROR;
+    }
+
+    for (int i = 0; i < size; i++) {
+        (*arr)[i] = NULL;
+    }
+
+    for (int i = 0; i < size; i += 1) {
+        cJSON* item = cJSON_GetArrayItem(json, i);
+        JsonState state = get_json_string(&((*arr)[i]), item);
+
+        if (state == CMB_JS_WARNING) {
+            (*arr)[i] = (char*)malloc(1);
+
+            if ((*arr)[i] == NULL) {
+                // printf("get_json_array error: Failed to dynamically allocate a string.\n");
+                return CMB_JS_ERROR;
+            } else {
+                (*arr)[i][0] = '\0';
+            }
+        } else if (state == CMB_JS_ERROR) {
+            for (int j = 0; j < i; j += 1) {
+                free((*arr)[j]);
+            }
+            free(*arr);
+            *len = 0;
+
+            // printf("get_json_array error: Got an error from get_json_string.\n");
+            return CMB_JS_ERROR;
+        }
+    }
+    // printf("get_json_array success: Successfully assigned values to arr.\n");
+    return CMB_JS_SUCCESS;
 }
 inline bool is_target(const char* preset_name, const char* target_name)
 {
     // printf("is_target: Checking... input: '%s' vs target: '%s'\n", preset_name, target_name);
     return (target_name == NULL) || (strcmp(preset_name, target_name) == 0);
 }
-int get_preset(const char* path, const char* preset_name, Preset* preset)
+int get_preset(const char* preset_name, Preset* preset)
 {
     // printf("get_preset: Reading file...\n");
     char* buf = NULL;
-    FileState state = read_file(path, &buf);
-    if (state != CFS_SUCCESS) {
+    FileState state = read_file(CMB_PRESETS_PATH, &buf);
+    if (state != CMB_FS_SUCCESS) {
         fprintf(stderr, "cmb_utils: Failed to read cmb_presets.json.\n");
         return 1;
     }
@@ -143,10 +192,10 @@ int get_preset(const char* path, const char* preset_name, Preset* preset)
     cJSON_ArrayForEach(presetObj, json)
     {
         cJSON* name = cJSON_GetObjectItemCaseSensitive(presetObj, "name");
-        get_json_string(&(preset->name), name);
+        OOPS(get_json_string(&(preset->name), name) == CMB_JS_ERROR);
 
         if (!is_target(preset->name, preset_name)) {
-            // printf("get_preset: '%s' is not the object we looking for.\n", name->valuestring);
+            printf("get_preset: '%s' is not the object we looking for.\n", name->valuestring);
             continue;
         }
         // printf("get_preset: Yes! We found '%s' here!\n", name->valuestring);
@@ -154,31 +203,35 @@ int get_preset(const char* path, const char* preset_name, Preset* preset)
         cJSON* compilers = cJSON_GetObjectItemCaseSensitive(presetObj, "compilers");
         if (compilers != NULL) {
             cJSON* c_compiler = cJSON_GetObjectItemCaseSensitive(compilers, "C");
-            get_json_string(&(preset->c_compiler), c_compiler);
+            OOPS(get_json_string(&(preset->c_compiler), c_compiler) == CMB_JS_ERROR);
 
             cJSON* cpp_compiler = cJSON_GetObjectItemCaseSensitive(compilers, "CXX");
-            get_json_string(&(preset->cpp_compiler), cpp_compiler);
+            OOPS(get_json_string(&(preset->cpp_compiler), cpp_compiler) == CMB_JS_ERROR);
         }
         cJSON* generator = cJSON_GetObjectItemCaseSensitive(presetObj, "generator");
-        get_json_string(&(preset->generator), generator);
+        OOPS(get_json_string(&(preset->generator), generator) == CMB_JS_ERROR);
 
         cJSON* source_dir = cJSON_GetObjectItemCaseSensitive(presetObj, "source_dir");
-        get_json_string(&(preset->source_dir), source_dir);
+        OOPS(get_json_string(&(preset->source_dir), source_dir) == CMB_JS_ERROR);
 
         cJSON* build_target = cJSON_GetObjectItemCaseSensitive(presetObj, "build_target");
-        get_json_string(&(preset->build_target), build_target);
+        OOPS(get_json_string(&(preset->build_target), build_target) == CMB_JS_ERROR);
 
         cJSON* build_dir = cJSON_GetObjectItemCaseSensitive(presetObj, "build_dir");
-        get_json_string(&(preset->build_dir), build_dir);
+        OOPS(get_json_string(&(preset->build_dir), build_dir) == CMB_JS_ERROR);
 
-		cJSON* run = cJSON_GetObjectItemCaseSensitive(presetObj, "run");
-		get_json_string(&(preset->run), run);
+        cJSON* run = cJSON_GetObjectItemCaseSensitive(presetObj, "run");
+        OOPS(get_json_string(&(preset->run), run) == CMB_JS_ERROR);
 
-        // cJSON* generateCmd = cJSON_GetObjectItemCaseSensitive(presetObj, "generateCmd");
-        // get array.
-        // cJSON* buildCmd = cJSON_GetObjectItemCaseSensitive(presetObj, "buildCmd");
-        // get array.
-        //
+        cJSON* generate_cmd = cJSON_GetObjectItemCaseSensitive(presetObj, "generate_cmd");
+        OOPS(get_json_array(&(preset->generate_cmd), &(preset->generate_cmd_size), generate_cmd) == CMB_JS_ERROR);
+
+        cJSON* build_cmd = cJSON_GetObjectItemCaseSensitive(presetObj, "build_cmd");
+        OOPS(get_json_array(&(preset->build_cmd), &(preset->build_cmd_size), build_cmd) == CMB_JS_ERROR);
+
+        cJSON* run_cmd = cJSON_GetObjectItemCaseSensitive(presetObj, "run_cmd");
+        OOPS(get_json_array(&(preset->run_cmd), &(preset->run_cmd_size), run_cmd) == CMB_JS_ERROR);
+
         break;
     }
     // printf("get_preset: Reading values for '%s': Pass\n", preset->name);
@@ -203,6 +256,28 @@ void free_preset(Preset* preset)
     if (preset->cpp_compiler != NULL)
         free(preset->cpp_compiler);
 
+    if (preset->run != NULL)
+        free(preset->run);
+
+    if (preset->generate_cmd != NULL && preset->generate_cmd_size > 0) {
+        for (int i = 0; i < preset->generate_cmd_size; i += 1) {
+            free((preset->generate_cmd)[i]);
+        }
+        free(preset->generate_cmd);
+    }
+    if (preset->build_cmd != NULL && preset->build_cmd_size > 0) {
+        for (int i = 0; i < preset->build_cmd_size; i += 1) {
+            free((preset->build_cmd)[i]);
+        }
+        free(preset->build_cmd);
+    }
+    if (preset->run_cmd != NULL && preset->run_cmd_size > 0) {
+        for (int i = 0; i < preset->run_cmd_size; i += 1) {
+            free((preset->run_cmd)[i]);
+        }
+        free(preset->run_cmd);
+    }
+
     if (preset->source_dir != NULL && strcmp(preset->source_dir, ".") != 0)
         free(preset->source_dir);
 
@@ -211,30 +286,67 @@ void free_preset(Preset* preset)
 
     if (preset->build_dir != NULL && strcmp(preset->build_dir, "target") != 0)
         free(preset->build_dir);
-
-	if (preset->run != NULL && strcmp(preset->run, "run") != 0)
-		free(preset->run);
 }
-int run_command(const char* format, ...)
+int run_command(const char* format, int argc, char* argv[], size_t cmd_len, char* cmd[], ...)
 {
-	va_list args;
-	va_start(args, format);
+    va_list args;
+    va_start(args, cmd);
 
-	int size = vsnprintf(NULL, 0, format, args) + 1;
+    int format_size = vsnprintf(NULL, 0, format, args) + 1;
+    va_end(args);
 
-	va_end(args);
+    if (format_size <= 0) {
+        fprintf(stderr, "cmb_utils: Failed to get the size of parameters.\n");
+        return 1;
+    }
 
-	if (size <= 0) return 1;
+    size_t params_size = 0;
+    int end_of_options = -1;
 
-	char* command = (char*)malloc(size);
-	if (command == NULL) return 1;
+    if (argc > CMD_NAME_IDX + 1) {
+        end_of_options = find_end_of_options(argc, argv);
+        if (end_of_options > 0) {
+            for (size_t i = end_of_options + 1; i < argc; i += 1) {
+                params_size += strlen(argv[i]) + 1;
+            }
+        }
+    }
+    if (cmd_len > 0) {
+        for (size_t i = 0; i < cmd_len; i += 1) {
+            params_size += strlen(cmd[i]) + 1;
+        }
+    }
 
-	va_start(args, format);
-	vsnprintf(command, size, format, args);
-	va_end(args);
+    size_t total_size = format_size + params_size;
+    char* command = (char*)malloc(total_size);
+    if (command == NULL) {
+        fprintf(stderr, "cmb_utils: Failed to allocate memory.\n");
+        return 1;
+    }
 
-	int result = system(command);
-	free(command);
+    va_start(args, cmd);
+    vsnprintf(command, format_size, format, args);
+    va_end(args);
 
-	return result;
+    if (argc > CMD_NAME_IDX + 1) {
+        if (end_of_options > 0) {
+            for (size_t i = end_of_options + 1; i < argc; i += 1) {
+                strcat_s(command, total_size, " ");
+                strcat_s(command, total_size, argv[i]);
+            }
+        }
+    }
+    if (cmd_len > 0) {
+        for (size_t i = 0; i < cmd_len; i += 1) {
+            strcat_s(command, total_size, " ");
+            strcat_s(command, total_size, cmd[i]);
+        }
+    }
+
+    printf("> %s\n", command);
+
+    int result = system(command);
+    free(command);
+
+    return result;
 }

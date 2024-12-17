@@ -28,7 +28,7 @@ events:
       Compilation of the C compiler identification source "CMakeCCompilerId.c" produced "CMakeCCompilerId.exe"
       
       The C compiler identification is Clang, found in:
-        D:/devs/projects/cmb/target/Debug/CMakeFiles/3.31.2/CompilerIdC/CMakeCCompilerId.exe
+        D:/devs/projects/cmb/target/Release/CMakeFiles/3.31.2/CompilerIdC/CMakeCCompilerId.exe
       
   -
     kind: "message-v1"
@@ -51,8 +51,8 @@ events:
     checks:
       - "Detecting C compiler ABI info"
     directories:
-      source: "D:/devs/projects/cmb/target/Debug/CMakeFiles/CMakeScratch/TryCompile-o59fns"
-      binary: "D:/devs/projects/cmb/target/Debug/CMakeFiles/CMakeScratch/TryCompile-o59fns"
+      source: "D:/devs/projects/cmb/target/Release/CMakeFiles/CMakeScratch/TryCompile-bziwdw"
+      binary: "D:/devs/projects/cmb/target/Release/CMakeFiles/CMakeScratch/TryCompile-bziwdw"
     cmakeVariables:
       CMAKE_C_FLAGS: "/DWIN32 /D_WINDOWS"
       CMAKE_C_FLAGS_DEBUG: "/Zi /Ob0 /Od /RTC1"
@@ -61,11 +61,11 @@ events:
       variable: "CMAKE_C_ABI_COMPILED"
       cached: true
       stdout: |
-        Change Dir: 'D:/devs/projects/cmb/target/Debug/CMakeFiles/CMakeScratch/TryCompile-o59fns'
+        Change Dir: 'D:/devs/projects/cmb/target/Release/CMakeFiles/CMakeScratch/TryCompile-bziwdw'
         
-        Run Build Command(s): D:/Scoop/shims/ninja.exe -v cmTC_f1162
-        [1/2] D:\\Scoop\\apps\\llvm\\current\\bin\\clang-cl.exe  /nologo   /DWIN32 /D_WINDOWS  /Zi /Ob0 /Od /RTC1 -MDd /showIncludes /FoCMakeFiles\\cmTC_f1162.dir\\CMakeCCompilerABI.c.obj /FdCMakeFiles\\cmTC_f1162.dir\\ -c -- D:\\Scoop\\apps\\cmake\\3.31.2\\share\\cmake-3.31\\Modules\\CMakeCCompilerABI.c
-        [2/2] C:\\WINDOWS\\system32\\cmd.exe /C "cd . && D:\\Scoop\\apps\\cmake\\3.31.2\\bin\\cmake.exe -E vs_link_exe --msvc-ver=1942 --intdir=CMakeFiles\\cmTC_f1162.dir --rc=D:\\Scoop\\apps\\llvm\\current\\bin\\llvm-rc.exe --mt=D:\\Scoop\\apps\\llvm\\current\\bin\\llvm-mt.exe --manifests  -- D:\\Scoop\\apps\\llvm\\current\\bin\\lld-link.exe /nologo CMakeFiles\\cmTC_f1162.dir\\CMakeCCompilerABI.c.obj  /out:cmTC_f1162.exe /implib:cmTC_f1162.lib /pdb:cmTC_f1162.pdb /version:0.0 /machine:x64  /debug /INCREMENTAL /subsystem:console   && cd ."
+        Run Build Command(s): D:/Scoop/shims/ninja.exe -v cmTC_2e7f2
+        [1/2] D:\\Scoop\\apps\\llvm\\current\\bin\\clang-cl.exe  /nologo   /DWIN32 /D_WINDOWS  /Zi /Ob0 /Od /RTC1 -MDd /showIncludes /FoCMakeFiles\\cmTC_2e7f2.dir\\CMakeCCompilerABI.c.obj /FdCMakeFiles\\cmTC_2e7f2.dir\\ -c -- D:\\Scoop\\apps\\cmake\\3.31.2\\share\\cmake-3.31\\Modules\\CMakeCCompilerABI.c
+        [2/2] C:\\WINDOWS\\system32\\cmd.exe /C "cd . && D:\\Scoop\\apps\\cmake\\3.31.2\\bin\\cmake.exe -E vs_link_exe --msvc-ver=1942 --intdir=CMakeFiles\\cmTC_2e7f2.dir --rc=D:\\Scoop\\apps\\llvm\\current\\bin\\llvm-rc.exe --mt=D:\\Scoop\\apps\\llvm\\current\\bin\\llvm-mt.exe --manifests  -- D:\\Scoop\\apps\\llvm\\current\\bin\\lld-link.exe /nologo CMakeFiles\\cmTC_2e7f2.dir\\CMakeCCompilerABI.c.obj  /out:cmTC_2e7f2.exe /implib:cmTC_2e7f2.lib /pdb:cmTC_2e7f2.pdb /version:0.0 /machine:x64  /debug /INCREMENTAL /subsystem:console   && cd ."
         
       exitCode: 0
   -
