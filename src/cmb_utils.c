@@ -131,12 +131,7 @@ JsonState get_json_array(char*** arr, size_t* len, const cJSON* json)
                 (*arr)[i][0] = '\0';
             }
         } else if (state == CMB_JS_ERROR) {
-            for (int j = 0; j < i; j += 1) {
-                free((*arr)[j]);
-            }
-            free(*arr);
-            *len = 0;
-
+            *len = i;
             // printf("get_json_array error: Got an error from get_json_string.\n");
             return CMB_JS_ERROR;
         }
@@ -195,7 +190,7 @@ int get_preset(const char* preset_name, Preset* preset)
         OOPS(get_json_string(&(preset->name), name) == CMB_JS_ERROR);
 
         if (!is_target(preset->name, preset_name)) {
-            printf("get_preset: '%s' is not the object we looking for.\n", name->valuestring);
+            // printf("get_preset: '%s' is not the object we looking for.\n", name->valuestring);
             continue;
         }
         // printf("get_preset: Yes! We found '%s' here!\n", name->valuestring);
@@ -214,8 +209,8 @@ int get_preset(const char* preset_name, Preset* preset)
         cJSON* source_dir = cJSON_GetObjectItemCaseSensitive(presetObj, "source_dir");
         OOPS(get_json_string(&(preset->source_dir), source_dir) == CMB_JS_ERROR);
 
-        cJSON* build_target = cJSON_GetObjectItemCaseSensitive(presetObj, "build_target");
-        OOPS(get_json_string(&(preset->build_target), build_target) == CMB_JS_ERROR);
+        cJSON* build_type = cJSON_GetObjectItemCaseSensitive(presetObj, "build_type");
+        OOPS(get_json_string(&(preset->build_type), build_type) == CMB_JS_ERROR);
 
         cJSON* build_dir = cJSON_GetObjectItemCaseSensitive(presetObj, "build_dir");
         OOPS(get_json_string(&(preset->build_dir), build_dir) == CMB_JS_ERROR);
@@ -281,13 +276,61 @@ void free_preset(Preset* preset)
     if (preset->source_dir != NULL && strcmp(preset->source_dir, ".") != 0)
         free(preset->source_dir);
 
-    if (preset->build_target != NULL && strcmp(preset->build_target, "Debug") != 0)
-        free(preset->build_target);
+    if (preset->build_type != NULL && strcmp(preset->build_type, "Debug") != 0)
+        free(preset->build_type);
 
     if (preset->build_dir != NULL && strcmp(preset->build_dir, "target") != 0)
         free(preset->build_dir);
 }
-int run_command(const char* format, int argc, char* argv[], size_t cmd_len, char* cmd[], ...)
+void format_string(char* str, size_t size, const char* format, ...)
+{
+    va_list args;
+    va_start(args, format);
+
+    vsnprintf(str, size, format, args);
+
+    va_end(args);
+}
+int make_init_commands(char*** arr, size_t* size, const Preset* preset, int argc, char* argv[])
+{
+    *size = preset->generate_cmd_size + 2; // 2 = (-S %s) + (-B %s), these are REQUIRED params.
+    int eoo = find_end_of_options(argc, argv);
+    if (eoo > 0) {
+        *size += (argc - eoo - 1);
+    }
+    printf("%zu", *size);
+    size_t arr_element_size = 0;
+
+    *arr = (char**)malloc((*size) * sizeof(char*));
+    OOPS(*arr == NULL);
+
+    // Create source_dir param
+    arr_element_size = strlen(preset->source_dir) + 3 + 1; // 3 = "-S ".length
+    (*arr)[0] = (char*)malloc(arr_element_size);
+    OOPS((*arr)[0] == NULL);
+    format_string((*arr)[0], arr_element_size, "-S %s", preset->source_dir);
+
+    // Create build_dir & build_target param
+    arr_element_size = strlen(preset->build_dir) + strlen(preset->build_type) + 1 + 3 + 1; // 3 = "-B ".length, 1 = "/".length
+    (*arr)[1] = (char*)malloc(arr_element_size);
+    OOPS((*arr)[1] == NULL);
+    format_string((*arr)[1], arr_element_size, "-B %s/%s", preset->build_dir, preset->build_type);
+
+    // Add additional params
+    for (int i = 2; i < preset->generate_cmd_size + 2; i += 1) {
+        // printf("preset->generate_cmd[%d]\n", i - 2);
+        (*arr)[i] = (preset->generate_cmd)[i - 2];
+    }
+    if (eoo > 0) {
+        for (int i = preset->generate_cmd_size + 2; i < preset->generate_cmd_size + argc - eoo + 1; i += 1) {
+            // printf("argv[%zu]\n", i + eoo - preset->generate_cmd_size - 1);
+            (*arr)[i] = argv[i + eoo - preset->generate_cmd_size - 1];
+        }
+    }
+
+    return 0;
+}
+int run_commands(const char* format, int argc, char* argv[], size_t cmd_len, char* cmd[], ...)
 {
     va_list args;
     va_start(args, cmd);

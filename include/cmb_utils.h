@@ -16,7 +16,7 @@ typedef struct {
     char* cpp_compiler;
     char* generator;
     char* source_dir;
-    char* build_target;
+    char* build_type;
     char* build_dir;
     char* run;
     char** generate_cmd;
@@ -42,4 +42,15 @@ bool is_target(const char* preset_name, const char* target_name);
 int get_preset(const char* preset_name, Preset* preset);
 void free_preset(Preset* preset);
 
-int run_command(const char* format, int argc, char* argv[], size_t cmd_len, char* cmd[], ...);
+void format_string(char* str, size_t size, const char* format, ...);
+void arr_to_string(char** arr);
+
+int make_commands_array();
+int make_commands_string();
+
+int run_init_commands(char*** arr, size_t* size, const Preset* preset, int argc, char* argv[]);
+int run_build_commands(char*** arr, size_t* size, const Preset* preset, int argc, char* argv[]);
+int run_run_commands(char*** arr, size_t* size, const Preset* preset, int argc, char* argv[]);
+
+int run_commands_win(size_t size, const char* args[]);
+int run_commands(size_t size, const char* args[]);

@@ -22,7 +22,7 @@ msvc_deps_prefix = Note: including file:
 
 rule C_COMPILER__cmb_unscanned_Debug
   deps = msvc
-  command = ${LAUNCHER}${CODE_CHECK}clang-cl  /nologo $DEFINES $INCLUDES $FLAGS /showIncludes /Fo$out /Fd$TARGET_COMPILE_PDB -c -- $in
+  command = ${LAUNCHER}${CODE_CHECK}D:\Scoop\apps\llvm\current\bin\clang-cl.exe  /nologo $DEFINES $INCLUDES $FLAGS /showIncludes /Fo$out /Fd$TARGET_COMPILE_PDB -c -- $in
   description = Building C object $out
 
 
@@ -48,7 +48,7 @@ rule CUSTOM_COMMAND
 
 rule C_COMPILER__cJSON_unscanned_Debug
   deps = msvc
-  command = ${LAUNCHER}${CODE_CHECK}clang-cl  /nologo $DEFINES $INCLUDES $FLAGS /showIncludes /Fo$out /Fd$TARGET_COMPILE_PDB -c -- $in
+  command = ${LAUNCHER}${CODE_CHECK}D:\Scoop\apps\llvm\current\bin\clang-cl.exe  /nologo $DEFINES $INCLUDES $FLAGS /showIncludes /Fo$out /Fd$TARGET_COMPILE_PDB -c -- $in
   description = Building C object $out
 
 

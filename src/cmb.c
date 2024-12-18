@@ -1,6 +1,7 @@
 #include "cmb.h"
 #include "cmb_utils.h"
 #include <stdio.h>
+#include <stdlib.h>
 
 // commands
 int cmb_help()
@@ -30,7 +31,7 @@ int cmb_init(int argc, char* argv[])
         .cpp_compiler = NULL,
         .generator = NULL,
         .source_dir = ".",
-        .build_target = "Debug",
+        .build_type = "Debug",
         .build_dir = "target",
         .run = NULL,
         .generate_cmd_size = 0,
@@ -47,18 +48,27 @@ int cmb_init(int argc, char* argv[])
 
     if (result != 0) {
         // printf("cmb_run error: Something went wrong in get_preset.\n");
+		free_preset(&preset);
         return result;
     }
-    run_command("cmake -S %s -B %s\\%s -G %s -DCMAKE_BUILD_TYPE=%s -DCMAKE_C_COMPILER=\"%s\" -DCMAKE_CXX_COMPILER=\"%s\"",
-        argc, argv,
-        preset.generate_cmd_size, preset.generate_cmd,
-        preset.source_dir,
-        preset.build_dir,
-        preset.build_target,
-        preset.generator,
-        preset.build_target,
-        preset.c_compiler,
-        preset.cpp_compiler);
+	
+	char** arr;
+	size_t size = 0;
+	make_init_commands(&arr, &size, &preset, argc, argv);
+	
+	free(arr[0]);
+	free(arr[1]);
+	free(arr);
+    /*run_command("cmake -S %s -B %s\\%s -G %s -DCMAKE_BUILD_TYPE=%s -DCMAKE_C_COMPILER=\"%s\" -DCMAKE_CXX_COMPILER=\"%s\"",*/
+    /*    argc, argv,*/
+    /*    preset.generate_cmd_size, preset.generate_cmd,*/
+    /*    preset.source_dir,*/
+    /*    preset.build_dir,*/
+    /*    preset.build_target,*/
+    /*    preset.generator,*/
+    /*    preset.build_target,*/
+    /*    preset.c_compiler,*/
+    /*    preset.cpp_compiler);*/
 
     free_preset(&preset);
 
@@ -73,7 +83,7 @@ int cmb_build(int argc, char* argv[])
         .cpp_compiler = NULL,
         .generator = NULL,
         .source_dir = ".",
-        .build_target = "Debug",
+        .build_type = "Debug",
         .build_dir = "target",
         .run = NULL,
         .generate_cmd_size = 0,
@@ -93,11 +103,11 @@ int cmb_build(int argc, char* argv[])
         return result;
     }
 
-    run_command("cmake --build %s\\%s",
-        argc, argv,
-        preset.build_cmd_size, preset.build_cmd,
-        preset.build_dir,
-        preset.build_target);
+    /*run_command("cmake --build %s\\%s",*/
+    /*    argc, argv,*/
+    /*    preset.build_cmd_size, preset.build_cmd,*/
+    /*    preset.build_dir,*/
+    /*    preset.build_target);*/
 
     free_preset(&preset);
 
@@ -112,7 +122,7 @@ int cmb_run(int argc, char* argv[])
         .cpp_compiler = NULL,
         .generator = NULL,
         .source_dir = ".",
-        .build_target = "Debug",
+        .build_type = "Debug",
         .build_dir = "target",
         .run = NULL,
         .generate_cmd_size = 0,
@@ -132,10 +142,10 @@ int cmb_run(int argc, char* argv[])
         return result;
     }
 
-    run_command("%s\\%s\\bin\\%s",
-        argc, argv,
-        preset.run_cmd_size, preset.run_cmd,
-        preset.build_dir, preset.build_target, preset.run);
+    /*run_command("%s\\%s\\bin\\%s",*/
+    /*    argc, argv,*/
+    /*    preset.run_cmd_size, preset.run_cmd,*/
+    /*    preset.build_dir, preset.build_target, preset.run);*/
 
     free_preset(&preset);
 
